@@ -1,0 +1,2 @@
+etcd_addr = "localhost:2379"
+jwt_secret = "t1Z/fhu9xJKrtPzcsX6Nzx9J12w="
