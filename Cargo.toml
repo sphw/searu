@@ -1,0 +1,5 @@
+[workspace]
+members = ["searu-node"]
+
+[patch.crates-io]
+kvm-bindings = { git = "https://github.com/cloud-hypervisor/kvm-bindings", branch = "ch-v0.4.0", features = ["with-serde", "fam-wrappers"] }

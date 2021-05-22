@@ -36,5 +36,4 @@ seccomp = { git = "https://github.com/firecracker-microvm/firecracker", tag = "v
 vmm = { git = "https://github.com/cloud-hypervisor/cloud-hypervisor.git", rev = "30a01277655bf943a5ccdab67d9d398b0335d669", features = ["acpi", "io_uring", "kvm"]}
 vmm-sys-util = "0.8.0"
 
-[patch.crates-io]
-kvm-bindings = { git = "https://github.com/cloud-hypervisor/kvm-bindings", branch = "ch-v0.4.0", features = ["with-serde", "fam-wrappers"] }
+
