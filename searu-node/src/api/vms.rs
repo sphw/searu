@@ -1,6 +1,6 @@
 use crate::{
     storage::Storage,
-    types::{Error, JwtClaim, ListResponse, Project, Vm, VmSpec},
+    types::{Error, JwtClaim, ListResponse, Vm},
 };
 use rocket::*;
 use rocket_contrib::json::Json;

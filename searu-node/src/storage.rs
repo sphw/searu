@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use etcd_client::{Client, Compare, CompareOp, GetOptions, PutOptions, Txn, TxnOp, WatchOptions};
+use etcd_client::{Client, Compare, CompareOp, GetOptions, Txn, TxnOp, WatchOptions};
 use futures::{Stream, StreamExt};
 use tokio::sync::Mutex;
 
@@ -49,7 +49,7 @@ impl Storage {
     }
 
     pub async fn delete<O: Object>(&self, key: &str) -> Result<(), Error> {
-        let resp = self
+        let _ = self
             .etcd
             .lock()
             .await
