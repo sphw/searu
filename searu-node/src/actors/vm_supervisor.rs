@@ -1,11 +1,7 @@
-use std::io::Read;
-use std::{collections::HashMap, ffi::OsStr, path::PathBuf, process::Stdio, time::Duration};
-
-use tokio::{io::AsyncWriteExt, process::Command};
-
+use super::HandleExt;
 use crate::vmm::{
     CmdlineConfig, ConsoleConfig, ConsoleOutputMode, CpusConfig, DiskConfig, KernelConfig,
-    MemoryConfig, RngConfig, VmConfig,
+    MemoryConfig, NetConfig, RngConfig, VmConfig,
 };
 use crate::{
     storage::{Event, Storage},
@@ -14,6 +10,9 @@ use crate::{
 use hyper::Body;
 use hyperlocal::{UnixClientExt, Uri};
 use rand::{distributions::Alphanumeric, Rng};
+use rtnetlink::Handle as NetLinkHandle;
+use std::{collections::HashMap, ffi::OsStr, path::PathBuf, process::Stdio, time::Duration};
+use tokio::{io::AsyncWriteExt, process::Command};
 
 use super::Actor;
 
@@ -21,14 +20,16 @@ pub struct VmSupervisor {
     storage: Storage,
     node_name: String,
     vms: HashMap<String, VmInstance>,
+    netlink_handle: NetLinkHandle,
 }
 
 impl VmSupervisor {
-    pub fn new(storage: Storage) -> Result<Self, Error> {
+    pub fn new(storage: Storage, handle: NetLinkHandle) -> Result<Self, Error> {
         Ok(Self {
             storage,
             node_name: sys_info::hostname()?,
             vms: HashMap::default(),
+            netlink_handle: handle,
         })
     }
 }
@@ -47,7 +48,7 @@ impl Actor for VmSupervisor {
         match message {
             Event::New(mut vm) => {
                 if Some(&self.node_name) == vm.status.node.as_ref()
-                    && vm.status.state == VmState::Uncreated
+                    && !self.vms.contains_key(&vm.metadata.name)
                 {
                     let name = vm.metadata.name.clone();
                     let inst = VmInstance::new(&vm).await?;
@@ -58,6 +59,20 @@ impl Actor for VmSupervisor {
                     inst.boot().await?;
                     vm.status.state = VmState::PoweredOn;
                     self.storage.store(&vm).await?;
+                    let tap = self
+                        .netlink_handle
+                        .get_link_by_name(format!("ich{}", vm.metadata.name))
+                        .await?;
+                    let vpc = self
+                        .netlink_handle
+                        .get_link_by_name(format!("b{}", vm.spec.vpc))
+                        .await?;
+                    self.netlink_handle
+                        .link()
+                        .set(tap.header.index)
+                        .master(vpc.header.index)
+                        .execute()
+                        .await?;
                 }
             }
             Event::Delete(vm) => {
@@ -153,7 +168,10 @@ impl VmInstance {
             initramfs: None,
             cmdline: CmdlineConfig::default(),
             disks: Some(disks),
-            net: Some(vec![]),
+            net: Some(vec![NetConfig {
+                tap: Some(format!("ich{}", vm.metadata.name)),
+                ..Default::default()
+            }]),
             rng: RngConfig::default(),
             balloon: None,
             fs: None,

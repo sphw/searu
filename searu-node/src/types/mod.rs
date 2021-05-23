@@ -3,7 +3,7 @@
 use etcd_client::KeyValue;
 use ipnet::Ipv4Net;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::borrow::Cow;
+use std::{borrow::Cow, net::Ipv4Addr};
 use thiserror::Error;
 
 mod auth;
@@ -54,6 +54,7 @@ pub struct VmSpec {
     pub cpus: u8,
     pub memory: usize,
     pub cloud_init: Option<String>,
+    pub powered_on: bool,
 }
 
 #[derive(Clone, Serialize, Deserialize, Default, Debug)]
@@ -75,15 +76,29 @@ impl Default for VmState {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Vpc {
-    metadata: Metadata,
-    spec: VpcSpec,
+    pub metadata: Metadata,
+    pub spec: VpcSpec,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct VpcSpec {
-    subnet: Ipv4Net,
+    pub subnet: Ipv4Net,
+    pub multicast_ip: Option<Ipv4Addr>,
+    pub vni: Option<u16>,
+}
+
+impl Object for Vpc {
+    const OBJECT_TYPE: &'static str = "vpc";
+
+    fn metadata(&self) -> Cow<'_, Metadata> {
+        Cow::Borrowed(&self.metadata)
+    }
+
+    fn set_version(&mut self, rev: i64) {
+        self.metadata.version = Some(rev)
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
@@ -164,6 +179,8 @@ pub enum Error {
     NotFound(String),
     #[error("persist: {0}")]
     Persist(#[from] tempfile::PersistError),
+    #[error("rtnetlink: {0}")]
+    RtNetlink(#[from] rtnetlink::Error),
 }
 
 #[derive(Serialize)]
