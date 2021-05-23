@@ -5,6 +5,10 @@ use std::{
 
 use tokio::{process::Command, sync::Mutex};
 
+use crate::vmm::{
+    CmdlineConfig, ConsoleConfig, ConsoleOutputMode, CpusConfig, DiskConfig, KernelConfig,
+    MemoryConfig, RngConfig, VmConfig,
+};
 use crate::{
     storage::{Event, Storage},
     types::{Error, Vm, VmState, VmStatus},
@@ -12,10 +16,6 @@ use crate::{
 use hyper::Body;
 use hyperlocal::{UnixClientExt, Uri};
 use rand::{distributions::Alphanumeric, Rng};
-use vmm::config::{
-    CmdlineConfig, ConsoleConfig, ConsoleOutputMode, CpusConfig, DiskConfig, KernelConfig,
-    MemoryConfig, RngConfig, VmConfig,
-};
 use vmm_sys_util::eventfd::EventFd;
 
 use super::Actor;

@@ -9,6 +9,7 @@ mod auth;
 mod config;
 mod storage;
 mod types;
+pub mod vmm;
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
