@@ -1,6 +1,6 @@
 #![allow(clippy::upper_case_acronyms)]
 
-use etcd_client::{KeyValue, ResponseHeader};
+use etcd_client::KeyValue;
 use ipnet::Ipv4Net;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::borrow::Cow;
@@ -25,7 +25,7 @@ impl Object for Project {
         })
     }
 
-    fn set_version(&mut self, rev: i64) {}
+    fn set_version(&mut self, _rev: i64) {}
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -151,10 +151,6 @@ pub enum Error {
     ActorSend,
     #[error("sysinfo: {0}")]
     SysInfo(#[from] sys_info::Error),
-    #[error("hypervisor: {0}")]
-    Hypervisor(#[from] hypervisor::HypervisorError),
-    #[error("vmm: {0}")]
-    Vmm(String),
     #[error("io: {0}")]
     IO(#[from] std::io::Error),
     #[error("join error: {0}")]
@@ -165,18 +161,6 @@ pub enum Error {
     Hyper(#[from] hyper::Error),
     #[error("not found: {0}")]
     NotFound(String),
-}
-
-impl From<vmm::Error> for Error {
-    fn from(err: vmm::Error) -> Self {
-        Error::Vmm(err.to_string())
-    }
-}
-
-impl From<vmm::api::ApiError> for Error {
-    fn from(err: vmm::api::ApiError) -> Self {
-        Error::Vmm(format!("{:?}", err))
-    }
 }
 
 #[derive(Serialize)]

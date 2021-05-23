@@ -1,22 +1,18 @@
-use std::{
-    collections::HashMap, path::PathBuf, process::Stdio, sync::Arc, thread::JoinHandle,
-    time::Duration,
+use std::{collections::HashMap, path::PathBuf, process::Stdio, time::Duration};
+
+use tokio::process::Command;
+
+use crate::vmm::{
+    CmdlineConfig, ConsoleConfig, ConsoleOutputMode, CpusConfig, DiskConfig, KernelConfig,
+    MemoryConfig, RngConfig, VmConfig,
 };
-
-use tokio::{process::Command, sync::Mutex};
-
 use crate::{
     storage::{Event, Storage},
-    types::{Error, Vm, VmState, VmStatus},
+    types::{Error, Vm, VmState},
 };
 use hyper::Body;
 use hyperlocal::{UnixClientExt, Uri};
 use rand::{distributions::Alphanumeric, Rng};
-use vmm::config::{
-    CmdlineConfig, ConsoleConfig, ConsoleOutputMode, CpusConfig, DiskConfig, KernelConfig,
-    MemoryConfig, RngConfig, VmConfig,
-};
-use vmm_sys_util::eventfd::EventFd;
 
 use super::Actor;
 
@@ -87,7 +83,7 @@ impl Actor for VmSupervisor {
 }
 
 struct VmInstance {
-    child: tokio::process::Child,
+    _child: tokio::process::Child,
     client: hyper::Client<hyperlocal::UnixConnector, Body>,
     socket_path: String,
 }
@@ -156,7 +152,7 @@ impl VmInstance {
         tokio::time::sleep(Duration::from_millis(500)).await; //TODO: We should have a better way of detecing when the hypervisor is ready
                                                               // but `hyperlocal` appears to panic when it can't access a url
         let body = serde_json::to_string(&vm_config)?;
-        let res = client
+        let _ = client
             .request(
                 hyper::Request::builder()
                     .method(hyper::Method::PUT)
@@ -165,14 +161,14 @@ impl VmInstance {
             )
             .await?;
         Ok(Self {
-            child,
+            _child: child,
             client,
             socket_path,
         })
     }
 
     async fn boot(&self) -> Result<(), Error> {
-        let res = self
+        let _ = self
             .client
             .request(
                 hyper::Request::builder()
@@ -185,7 +181,7 @@ impl VmInstance {
     }
 
     async fn shutdown(&self) -> Result<(), Error> {
-        let res = self
+        let _ = self
             .client
             .request(
                 hyper::Request::builder()

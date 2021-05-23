@@ -27,7 +27,7 @@ pub async fn get(
     let node: Node = storage
         .get(&id)
         .await?
-        .ok_or(Error::NotFound(format!("node: {}", id)))?;
+        .ok_or_else(|| Error::NotFound(format!("node: {}", id)))?;
     Ok(node.into())
 }
 
