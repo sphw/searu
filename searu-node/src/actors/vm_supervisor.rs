@@ -1,6 +1,7 @@
-use std::{collections::HashMap, path::PathBuf, process::Stdio, time::Duration};
+use std::io::Read;
+use std::{collections::HashMap, ffi::OsStr, path::PathBuf, process::Stdio, time::Duration};
 
-use tokio::process::Command;
+use tokio::{io::AsyncWriteExt, process::Command};
 
 use crate::vmm::{
     CmdlineConfig, ConsoleConfig, ConsoleOutputMode, CpusConfig, DiskConfig, KernelConfig,
@@ -96,13 +97,37 @@ impl VmInstance {
             .map(char::from)
             .collect();
         let socket_path = format!("/tmp/{}-{}.sock", vm.metadata.name, socket);
-        let child = Command::new("./cloud-hypervisor")
+        let child = Command::new("./blobs/cloud-hypervisor")
             .kill_on_drop(true)
             .args(vec!["--api-socket", &format!("path={}", socket_path)])
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .stdin(Stdio::null())
             .spawn()?;
+        let mut disks = vec![DiskConfig {
+            path: Some(PathBuf::from("./blobs/focal-server-cloudimg-amd64.raw")),
+            ..Default::default()
+        }];
+        if let Some(ref cloud_init) = vm.spec.cloud_init {
+            println!("creating cloud-init");
+            let user_data = tempfile::NamedTempFile::new()?;
+            let (_, user_data) = user_data.keep()?;
+            let mut convert = Command::new("cloud-localds")
+                .kill_on_drop(true)
+                .args(vec![user_data.as_os_str(), OsStr::new("-")])
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .stdin(Stdio::piped())
+                .spawn()?;
+            let stdin = convert.stdin.as_mut().unwrap();
+            stdin.write_all(cloud_init.as_bytes()).await?;
+            let _ = convert.wait().await?;
+            disks.push(DiskConfig {
+                path: Some(user_data.to_path_buf()),
+                ..Default::default()
+            });
+            println!("{:?}", user_data);
+        }
         let client = hyper::Client::unix();
         let vm_config = VmConfig {
             cpus: CpusConfig {
@@ -117,7 +142,7 @@ impl VmInstance {
                 ..Default::default()
             },
             kernel: Some(KernelConfig {
-                path: PathBuf::from("./hypervisor-fw"),
+                path: PathBuf::from("./blobs/hypervisor-fw"),
             }),
             serial: ConsoleConfig::default_serial(),
             console: ConsoleConfig {
@@ -127,16 +152,7 @@ impl VmInstance {
             },
             initramfs: None,
             cmdline: CmdlineConfig::default(),
-            disks: Some(vec![
-                DiskConfig {
-                    path: Some(PathBuf::from("./focal-server-cloudimg-amd64.raw")),
-                    ..Default::default()
-                },
-                DiskConfig {
-                    path: Some(PathBuf::from("./user-data.img")),
-                    ..Default::default()
-                },
-            ]),
+            disks: Some(disks),
             net: Some(vec![]),
             rng: RngConfig::default(),
             balloon: None,
@@ -149,7 +165,7 @@ impl VmInstance {
             watchdog: false,
             numa: None,
         };
-        tokio::time::sleep(Duration::from_millis(500)).await; //TODO: We should have a better way of detecing when the hypervisor is ready
+        tokio::time::sleep(Duration::from_millis(500)).await; //TODO: We should have a better way of detecting when the hypervisor is ready
                                                               // but `hyperlocal` appears to panic when it can't access a url
         let body = serde_json::to_string(&vm_config)?;
         let _ = client
@@ -168,6 +184,7 @@ impl VmInstance {
     }
 
     async fn boot(&self) -> Result<(), Error> {
+        println!("booting vm");
         let _ = self
             .client
             .request(
@@ -177,6 +194,7 @@ impl VmInstance {
                     .body(Body::from(""))?,
             )
             .await?;
+        println!("booted vm");
         Ok(())
     }
 

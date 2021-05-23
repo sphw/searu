@@ -53,6 +53,7 @@ pub struct VmSpec {
     pub vpc: String,
     pub cpus: u8,
     pub memory: usize,
+    pub cloud_init: Option<String>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Default, Debug)]
@@ -161,6 +162,8 @@ pub enum Error {
     Hyper(#[from] hyper::Error),
     #[error("not found: {0}")]
     NotFound(String),
+    #[error("persist: {0}")]
+    Persist(#[from] tempfile::PersistError),
 }
 
 #[derive(Serialize)]
