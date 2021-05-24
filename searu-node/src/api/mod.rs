@@ -4,6 +4,7 @@ mod nodes;
 mod projects;
 mod users;
 mod vms;
+mod vpcs;
 
 #[get("/")]
 pub fn index() -> &'static str {
@@ -16,5 +17,6 @@ pub fn routes() -> Vec<Route> {
     routes.append(&mut projects::routes());
     routes.append(&mut nodes::routes());
     routes.append(&mut vms::routes());
+    routes.append(&mut vpcs::routes());
     routes
 }

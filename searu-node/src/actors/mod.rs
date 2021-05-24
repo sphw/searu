@@ -1,10 +1,12 @@
 mod node_info;
 mod scheduler;
 mod vm_supervisor;
+mod vpc_supervisor;
 mod watcher;
 pub use node_info::*;
 pub use scheduler::*;
 pub use vm_supervisor::*;
+pub use vpc_supervisor::*;
 pub use watcher::*;
 
 use std::time::Duration;
@@ -66,6 +68,12 @@ pub trait Actor {
 
 type ActorSender<Message, Response> = Sender<(Message, oneshot::Sender<Result<Response, Error>>)>;
 pub struct Handle<A: Actor>(ActorSender<A::Message, A::Response>);
+
+impl<A: Actor> Clone for Handle<A> {
+    fn clone(&self) -> Self {
+        Handle(self.0.clone())
+    }
+}
 
 impl<A: Actor> Handle<A> {
     async fn send(&self, msg: A::Message) -> Result<A::Response, Error> {
