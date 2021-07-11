@@ -35,7 +35,7 @@ pub async fn delete(
     name: &str,
     _claim: JwtClaim,
 ) -> Result<(), Error> {
-    storage.delete::<Vpc>(name).await?;
+    storage.delete::<Vpc>(name, None).await?;
     Ok(())
 }
 

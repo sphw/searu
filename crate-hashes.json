@@ -1,0 +1,13 @@
+{
+  "async-stream 0.3.0 (git+https://github.com/SergioBenitez/async-stream.git?rev=c46ada9#c46ada948e0d4800393836f57eb2a3db516beb1e)": "0x5nq3nvvx8iz2kqc7dfdy2wdnzfymd6xbnmb0ihyki3ya4fbk35",
+  "async-stream-impl 0.3.0 (git+https://github.com/SergioBenitez/async-stream.git?rev=c46ada9#c46ada948e0d4800393836f57eb2a3db516beb1e)": "0x5nq3nvvx8iz2kqc7dfdy2wdnzfymd6xbnmb0ihyki3ya4fbk35",
+  "devise 0.3.0 (git+https://github.com/SergioBenitez/Devise.git?rev=df00b5#df00b5162edd53e8d496e7935774e69b5f7f6bdf)": "1lwdpbv2gwgqyzphqdnvjzmz0ilpyqlwyngf019qad6ma4kifr8r",
+  "devise_codegen 0.3.0 (git+https://github.com/SergioBenitez/Devise.git?rev=df00b5#df00b5162edd53e8d496e7935774e69b5f7f6bdf)": "1lwdpbv2gwgqyzphqdnvjzmz0ilpyqlwyngf019qad6ma4kifr8r",
+  "devise_core 0.3.0 (git+https://github.com/SergioBenitez/Devise.git?rev=df00b5#df00b5162edd53e8d496e7935774e69b5f7f6bdf)": "1lwdpbv2gwgqyzphqdnvjzmz0ilpyqlwyngf019qad6ma4kifr8r",
+  "multer 1.2.2 (git+https://github.com/rousan/multer-rs.git?rev=7e4f0c5f#7e4f0c5fe14e4c531f503922bfe04f68b32ddf17)": "0rhpym22484qf2sxic13f5j381d732406b3rs0hpjkfvclk0w7xz",
+  "rocket 0.5.0-dev (git+https://github.com/SergioBenitez/Rocket.git?rev=3a7559edcec7c443e68e22e038aaa2d90ef27c23#3a7559edcec7c443e68e22e038aaa2d90ef27c23)": "0n9h3pfd5jppgqaa1p6bxbnbjhfy31v4zbvmhj8h0xkrwscfz2jy",
+  "rocket_codegen 0.5.0-dev (git+https://github.com/SergioBenitez/Rocket.git?rev=3a7559edcec7c443e68e22e038aaa2d90ef27c23#3a7559edcec7c443e68e22e038aaa2d90ef27c23)": "0n9h3pfd5jppgqaa1p6bxbnbjhfy31v4zbvmhj8h0xkrwscfz2jy",
+  "rocket_contrib 0.5.0-dev (git+https://github.com/SergioBenitez/Rocket.git?rev=3a7559edcec7c443e68e22e038aaa2d90ef27c23#3a7559edcec7c443e68e22e038aaa2d90ef27c23)": "0n9h3pfd5jppgqaa1p6bxbnbjhfy31v4zbvmhj8h0xkrwscfz2jy",
+  "rocket_http 0.5.0-dev (git+https://github.com/SergioBenitez/Rocket.git?rev=3a7559edcec7c443e68e22e038aaa2d90ef27c23#3a7559edcec7c443e68e22e038aaa2d90ef27c23)": "0n9h3pfd5jppgqaa1p6bxbnbjhfy31v4zbvmhj8h0xkrwscfz2jy",
+  "state 0.4.2 (git+https://github.com/SergioBenitez/state.git?rev=8f94dc#8f94dce673b7d4b0e7b96c808a84f5e2a4be4a60)": "1nsdjviavijq86l2m9c923y5icw7kq7wmgzgk1d0ix3p9bmclxd0"
+}

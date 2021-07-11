@@ -1,4 +1,5 @@
 use super::HandleExt;
+use crate::types::Object;
 use crate::vmm::{
     CmdlineConfig, ConsoleConfig, ConsoleOutputMode, CpusConfig, DiskConfig, KernelConfig,
     MemoryConfig, NetConfig, RngConfig, VmConfig,
@@ -9,7 +10,6 @@ use crate::{
 };
 use hyper::Body;
 use hyperlocal::{UnixClientExt, Uri};
-use rand::{distributions::Alphanumeric, Rng};
 use rtnetlink::Handle as NetLinkHandle;
 use std::{collections::HashMap, ffi::OsStr, path::PathBuf, process::Stdio, time::Duration};
 use tokio::{io::AsyncWriteExt, process::Command};
@@ -47,13 +47,13 @@ impl Actor for VmSupervisor {
         println!("{:?}", message);
         match message {
             Event::New(mut vm) => {
+                let vm_name = format!("{}/{}", vm.metadata.project, vm.metadata.name);
                 if Some(&self.node_name) == vm.status.node.as_ref()
-                    && !self.vms.contains_key(&vm.metadata.name)
+                    && !self.vms.contains_key(&vm_name)
                 {
-                    let name = vm.metadata.name.clone();
                     let inst = VmInstance::new(&vm).await?;
-                    self.vms.insert(name, inst);
-                    let inst = self.vms.get_mut(&vm.metadata.name).unwrap();
+                    self.vms.insert(vm_name.clone(), inst);
+                    let inst = self.vms.get_mut(&vm_name).unwrap();
                     vm.status.state = VmState::PoweredOff;
                     self.storage.store(&vm).await?;
                     inst.boot().await?;
@@ -106,12 +106,10 @@ struct VmInstance {
 
 impl VmInstance {
     async fn new(vm: &Vm) -> Result<Self, Error> {
-        let socket: String = rand::thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(30)
-            .map(char::from)
-            .collect();
-        let socket_path = format!("/tmp/{}-{}.sock", vm.metadata.name, socket);
+        let socket_path = format!(
+            "/var/run/searu/{}-{}.sock",
+            vm.metadata.project, vm.metadata.name
+        );
         let child = Command::new("./blobs/cloud-hypervisor")
             .kill_on_drop(true)
             .args(vec!["--api-socket", &format!("path={}", socket_path)])

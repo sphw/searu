@@ -1,8 +1,11 @@
+mod dhcp;
 mod node_info;
 mod scheduler;
 mod vm_supervisor;
 mod vpc_supervisor;
 mod watcher;
+
+pub use dhcp::*;
 pub use node_info::*;
 pub use scheduler::*;
 pub use vm_supervisor::*;

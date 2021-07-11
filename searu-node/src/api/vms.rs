@@ -29,13 +29,14 @@ pub async fn list(
     .into())
 }
 
-#[delete("/vms/<name>")]
+#[delete("/vms/<project>/<name>")]
 pub async fn delete(
     storage: State<'_, Storage>,
+    project: &str,
     name: &str,
     _claim: JwtClaim,
 ) -> Result<(), Error> {
-    storage.delete::<Vm>(name).await?;
+    storage.delete::<Vm>(name, Some(project)).await?;
     Ok(())
 }
 

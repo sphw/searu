@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use etcd_client::{Client, Compare, CompareOp, GetOptions, Txn, TxnOp, WatchOptions};
+use etcd_client::{Client, Compare, CompareOp, GetOptions, PutOptions, Txn, TxnOp, WatchOptions};
 use futures::{Stream, StreamExt};
 use tokio::sync::Mutex;
 
@@ -19,6 +19,14 @@ impl Storage {
     }
 
     pub async fn store(&self, object: &impl Object) -> Result<(), Error> {
+        self.store_with_options(object, None).await
+    }
+
+    pub async fn store_with_options(
+        &self,
+        object: &impl Object,
+        options: Option<PutOptions>,
+    ) -> Result<(), Error> {
         let key = object.key();
         let mut txn = Txn::new();
         if let Some(version) = object.metadata().version {
@@ -28,10 +36,21 @@ impl Storage {
                 version,
             )]);
         }
-        txn = txn.and_then(vec![TxnOp::put(key, serde_json::to_vec(object)?, None)]);
+        txn = txn.and_then(vec![TxnOp::put(key, serde_json::to_vec(object)?, options)]);
         let mut client = self.etcd.lock().await;
         client.txn(txn).await?;
         Ok(())
+    }
+
+    pub async fn grant_lease(&self, ttl: i64) -> Result<i64, Error> {
+        let resp = self
+            .etcd
+            .lock()
+            .await
+            .lease_client()
+            .grant(ttl, None)
+            .await?;
+        Ok(resp.id())
     }
 
     pub async fn get<O: Object>(&self, key: &str) -> Result<Option<O>, Error> {
@@ -48,13 +67,13 @@ impl Storage {
         }
     }
 
-    pub async fn delete<O: Object>(&self, key: &str) -> Result<(), Error> {
-        let _ = self
-            .etcd
-            .lock()
-            .await
-            .delete(format!("{}/{}", O::OBJECT_TYPE, key), None)
-            .await?;
+    pub async fn delete<O: Object>(&self, key: &str, project: Option<&str>) -> Result<(), Error> {
+        let key = if let Some(project) = project {
+            format!("{}/{}/{}", O::OBJECT_TYPE, project, key)
+        } else {
+            format!("{}/{}", O::OBJECT_TYPE, key)
+        };
+        let _ = self.etcd.lock().await.delete(key, None).await?;
         Ok(())
     }
 
@@ -94,6 +113,7 @@ impl Storage {
                                 }
                             }
                             etcd_client::EventType::Delete => {
+                                println!("delete event");
                                 let key = e.kv()?.key();
                                 let key = std::str::from_utf8(key).ok()?;
                                 let key = if key.len() > O::OBJECT_TYPE.len() + 1 {

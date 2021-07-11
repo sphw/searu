@@ -114,7 +114,17 @@ pub trait Object: Serialize + DeserializeOwned {
     fn metadata(&self) -> Cow<'_, Metadata>;
 
     fn key(&self) -> String {
-        format!("{}/{}", Self::OBJECT_TYPE, self.metadata().name)
+        let metadata = self.metadata();
+        if metadata.project != "" {
+            format!(
+                "{}/{}/{}",
+                Self::OBJECT_TYPE,
+                metadata.project,
+                metadata.name
+            )
+        } else {
+            format!("{}/{}", Self::OBJECT_TYPE, metadata.name)
+        }
     }
 
     fn set_version(&mut self, rev: i64);
